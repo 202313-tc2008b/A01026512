@@ -1,4 +1,5 @@
 import mesa
+import csv
 from agents import *
 from scheduler import RandomActivationByTypeFiltered
 
@@ -6,11 +7,27 @@ class StreetView(mesa.Model):
 
     description = "MESA Visualization of the street cross simulation."
 
+    def load_road_directions(self, filename="direcciones.csv"):
+        directions = []
+
+        with open(filename, newline='') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # Skip header row
+
+            rows = list(reader)
+
+            for col in range(1, len(rows[0])):  # Iterate over columns, starting from the second column
+                direction_col = [row[col].strip() for row in rows]
+                direction_col.reverse()  # Invertir el orden de los datos en cada subarray
+                directions.append(direction_col)
+
+        return directions
+
     def __init__(
         self,
-        num = 2,
-        width=25,
-        height=25,
+        population = 2,## number of cars
+        width=24,
+        height=24,
         speed=1,
         vision=10,
         separation=2,
@@ -18,36 +35,27 @@ class StreetView(mesa.Model):
         separate=0.25,
         match=0.04,
         pathIndex=0,
-        buildingPos=[(2, 21), (3, 21), (4, 21), (5, 21), (6, 21), (7, 21), (8, 21), (9, 21),           (11, 21), (12, 21),                   (17, 21), (18, 21),                (21, 21), (22, 21),
-                                     (3, 20), (4, 20), (5, 20), (6, 20), (7, 20), (8, 20), (9, 20), (10, 20), (11, 20), (12, 20),                   (17, 20),                          (21, 20), (22, 20),
-                            (2, 19), (3, 19), (4, 19), (5, 19), (6, 19), (7, 19), (8, 19), (9, 19), (10, 19), (11, 19),                             (17, 19), (18, 19),                          (22, 19),
-                            (2, 18), (3, 18), (4, 18), (5, 18), (6, 18),          (8, 18), (9, 18), (10, 18), (11, 18), (12, 18),                   (17, 18), (18, 18),                (21, 18), (22, 18),
-                            
-                            (2, 15), (3, 15), (4, 15),                   (7, 15),          (9, 15), (10, 15), (11, 15), (12, 15),                   (17, 15), (18, 15),                (21, 15), (22, 15),
-                            (2, 14), (3, 14), (4, 14),                   (7, 14), (8, 14), (9, 14), (10, 14), (11, 14), (12, 14),                   (17, 14), (18, 14),                (21, 14),
-                            (2, 13), (3, 13),                            (7, 13), (8, 13), (9, 13), (10, 13), (11, 13),                                       (18, 13),                (21, 13), (22, 13),
-                            (2, 12), (3, 12), (4, 12),                   (7, 12), (8, 12), (9, 12), (10, 12), (11, 12), (12, 12),                   (17, 12), (18, 12),                (21, 12), (22, 12),
-                            
-                            
-                            
-                            
-                            (2, 7), (3, 7), (4, 7), (5, 7),                           (8, 7), (9, 7), (10, 7), (11, 7), (12, 7),                    (17, 7), (18, 7), (19, 7), (20, 7), (21, 7), (22, 7),
-                                    (3, 6), (4, 6), (5, 6),                           (8, 6), (9, 6), (10, 6), (11, 6), (12, 6),                    (17, 6),          (19, 6),          (21, 6), (22, 6),
-                            (2, 5), (3, 5), (4, 5), (5, 5),                           (8, 5), (9, 5), (10, 5), (11, 5), (12, 5),
-                            (2, 4), (3, 4), (4, 4), (5, 4),                           (8, 4), (9, 4), (10, 4), (11, 4), (12, 4),
-                            (2, 3), (3, 3), (4, 3),                                           (9, 3), (10, 3), (11, 3), (12, 3),                    (17, 3), (18, 3), (19, 3),          (21, 3), (22, 3),
-                            (2, 2), (3, 2), (4, 2), (5, 2),                           (8, 2), (9, 2), (10, 2), (11, 2), (12, 2),                    (17, 2), (18, 2), (19, 2), (20, 2), (21, 2), (22, 2)],
+        buildingPos=[(2, 2),(2, 3), (2, 4),(2, 5),(2, 7),(3, 2),(3, 3),(3, 4),(3, 5),(3, 6),(3, 7),(4, 2),(4, 3),(4, 4),(4, 5),(4, 6),(4, 7),(5, 2),(5, 4),(5, 5),(5, 6),(5, 7),(8, 2),(8, 4),
+                     (8, 5),(8, 6),(8, 7),(9, 2),(9, 3),(9, 4),(9, 5),(9, 6),(9, 7),(10, 2),(10, 3),(10, 4),(10, 5),(11, 5),(11, 2),(11, 3),(11, 4),(11, 6),(11, 7),(10, 6),(10, 7),(2, 12),
+                     (2, 13),(2, 14),(2, 15),(3, 12),(3, 13),(3, 14),(3, 15),(4, 12),(4, 14),(4, 15),(7, 12),(7, 13),(7, 14),(7, 15),(8, 12),(8, 13),(8, 14),(9, 12),(9, 13),(9, 14),(9, 15),(10, 12),
+                     (10, 13),(10, 14), (10, 15),(11, 12), (11, 14),(11, 15), (2, 18),(2, 19),(2, 21),(3, 18),(3, 19),(3, 20),(3, 21),(4, 18),(4, 19),(4, 20),(4, 21),(5, 18),(5, 19),(5, 20),
+                     (5, 21),(6, 19),(6, 20),(6, 21),(7, 18),(7, 19),(7, 20),(7, 21),(8, 18),(8, 19),(8, 20),(8, 21),(9, 18),(9, 19),(9, 20),(10, 18),(10, 19),(10, 20),(10, 21),(11, 18),(11, 20),(11, 21),
+                     (16, 2),(16, 3),(17, 2),(17, 3),(18, 2),(18, 3),(19, 2),(20, 2),(20, 3),(21, 2),(21, 3),(16, 6),(16, 7),(17, 7),(18, 6),(18, 7),(19, 7),(20, 6),(20, 7),(21, 6),(21, 7),(16, 12),
+                     (16, 14),(16, 15),(17, 12),(17, 13),(17, 14),(17, 15),(20, 12),(20, 13),(20, 14),(20, 15),(21, 12),(21, 13),(21, 15),(16, 18),(16, 19),(16, 20),(16, 21),(17, 18),(17, 19),(17, 21),
+                     (20, 18),(20, 20), (20, 21),(21, 18),(21, 19),(21, 20),(21, 21),(13, 9),(13, 10),(14, 9),(14, 10)],
 
-        parkingSpotsPos=[(10, 21), (2, 20), (12, 19), (7, 18), (8, 15), (4, 13), (12, 13), (2, 6), (5, 3), (8, 3), (18, 20), (17, 13), (18, 6), (21, 19), (22, 14), (20, 6), (20, 3)],
-        roundAboutPos = [(14, 10), (15, 10), (14, 9), (15, 9)],
-        trafficLightPos = [(15, 21), (16, 21), (5, 15), (6, 15), (0, 12), (1, 12), (23, 7), (24, 7), (13, 2), (14, 2), (15, 3), (16, 3), (17, 23), (17, 22), (8, 17), (8, 16), (2, 11), (2, 10), (22, 9), (22, 8), (17, 5), (17, 4), (12, 1), (12, 0)],
+        parkingSpotsPos=[ (9, 21),(2, 20), (17, 20),(11, 19), (20, 19),(6, 18), (8, 15),(21, 14), (4, 13),(11, 13), (16, 13),(2, 6), (17, 6),(19, 6), (5, 3),(8, 3), (19, 3)],
+        roundAboutPos = [(14, 10), (13, 10), (14, 9), (13, 9)],
+        trafficLightPos = [ (14, 21), (15, 21), (0, 12), (1, 12), (12, 2), (13, 2), (14, 3), (15, 3), (22, 7), (23, 7), (5, 15), (6, 15), 
+                           (16, 22), (16, 23), (2, 11), (2, 10), (21, 8), (21, 9), (11, 0), (11, 1), (16, 4), (16, 5), (21, 8), (21, 9), (7, 16), (7, 17)],
+        startendPos = [[[1, 6], [5, 3]], [[9, 22], [8, 15]]]
     ):
         super().__init__()
         # Set parameters
-        # self.width = width
-        # self.height = height
-
-        self.population = num
+        self.width = width
+        self.height = height
+        self.schedule = RandomActivationByTypeFiltered(self)
+        self.population = population
         self.vision = vision
         self.speed = speed
         self.separation = separation
@@ -57,8 +65,11 @@ class StreetView(mesa.Model):
         self.parkingSpotsPos = parkingSpotsPos if parkingSpotsPos else []
         self.roundAboutPos = roundAboutPos if roundAboutPos else []
         self.trafficLightPos = trafficLightPos if trafficLightPos else []
+        self.road_directions = self.load_road_directions()
+        self.startendPos = startendPos if startendPos else []
+
         
-        self.schedule = RandomActivationByTypeFiltered(self)
+        
         # self.space = mesa.space.ContinuousSpace(width, height, True)
         self.factors = {"cohere": cohere, "separate": separate, "match": match}
         
@@ -76,11 +87,28 @@ class StreetView(mesa.Model):
         self.running = True
         self.datacollector.collect(self)
 
+
+    def move_cars_based_on_traffic_lights(self):
+        for agent in self.schedule.agents:
+            if isinstance(agent, Car):
+                if self.is_traffic_light_red(agent.pos):
+                    # Stop the car at the red light
+                    continue
+
+                # Check if the next position is valid based on road directions
+                next_pos = agent.path[agent.currentPathIndex + 1] if agent.currentPathIndex < len(agent.path) - 1 else agent.pos
+                if agent.can_move(tuple(map(int, next_pos))):
+                    agent.step()
+                else:
+                    # Stop the car if the next position is not valid
+                    continue
+
     def make_agents(self):
         """
         Crea agentes self.population, con posiciones y direcciones iniciales aleatorias.
         """
         # CARS
+
         for i in range(self.population):
             r = self.random.randint(0, len(self.parkingSpotsPos)-1)
             rg = self.random.randint(0, len(self.parkingSpotsPos)-1)
@@ -88,17 +116,22 @@ class StreetView(mesa.Model):
                 r = self.random.randint(0, len(self.parkingSpotsPos)-1)
                 rg = self.random.randint(0, len(self.parkingSpotsPos)-1)
             else:
-                print("Valor de r: ", r)
-                print("Valor de rg: ", rg)
+                print("Value of r: ", r)
+                print("Value of rg: ", rg)
 
-                x = self.parkingSpotsPos[r][0]
-                y = self.parkingSpotsPos[r][1]
+                # x = self.parkingSpotsPos[r][0]
+                # y = self.parkingSpotsPos[r][1]
+                x = self.startendPos[i][0][0]
+                y = self.startendPos[i][0][1]
 
-                xg = self.parkingSpotsPos[rg][0]
-                yg = self.parkingSpotsPos[rg][1]
-                pos = np.array((x, y))
+                # xg = self.parkingSpotsPos[rg][0]
+                # yg = self.parkingSpotsPos[rg][1]
+                xg = self.startendPos[i][1][0]
+                yg = self.startendPos[i][1][1]
+
+                pos = (x, y)
                 path = []
-                goal = np.array((xg, yg))
+                goal = (xg, yg)
 
                 car = Car(
                     i,
@@ -107,11 +140,12 @@ class StreetView(mesa.Model):
                     path,
                     self.pathIndex,
                     goal,
+                    self.road_directions
                 )
 
                 self.grid.place_agent(car, pos)
                 self.schedule.add(car)
-        
+
         # BUILDINGS
         for i in range(len(self.buildingPos)):
             x = self.buildingPos[i][0]
@@ -161,15 +195,22 @@ class StreetView(mesa.Model):
             self.schedule.add(roundabout)
 
         # TRAFFIC LIGHTS
+
+        green_traffic_light_positions = [(14, 21), (15, 21), (0, 12), (1, 12), (12, 2), (13, 2), (14, 3), (15, 3), (22, 7), (23, 7), (5, 15), (6, 15)]
+        red_traffic_light_positions = [(16, 22), (16, 23), (2, 11), (2, 10), (21, 8), (21, 9), (11, 0), (11, 1), (16, 4), (16, 5), (21, 8), (21, 9), (7, 16), (7, 17)]
+
         for i in range(len(self.trafficLightPos)):
             x = self.trafficLightPos[i][0]
             y = self.trafficLightPos[i][1]
 
             pos = np.array((x, y))
 
-            if i == 0 or i == 1 or i ==12 or i == 13 or i == 14 or i == 15 or i == 16 or i == 17 or i == 18 or i == 19 or i == 22 or i == 23:
+            if any(np.array_equal(pos, green_pos) for green_pos in green_traffic_light_positions):
                 state = "green"
+            elif any(np.array_equal(pos, red_pos) for red_pos in red_traffic_light_positions):
+                state = "red"
             else:
+                # Set default state if not specified
                 state = "red"
 
             trafficlight = TrafficLight(
@@ -181,9 +222,19 @@ class StreetView(mesa.Model):
             
             self.grid.place_agent(trafficlight, pos)
             self.schedule.add(trafficlight)
+        
 
     def step(self):
+        if self.schedule.steps % 5 == 0:
+            for agent in self.schedule.agents:
+                if isinstance(agent, TrafficLight):
+                    if agent.state == "green":
+                        agent.state = "red"
+                    else:
+                        agent.state = "green"
+
         self.schedule.step()
+        self.datacollector.collect(self)
 
     def getCarPositions(self):
         car_positions = []
@@ -212,4 +263,3 @@ class StreetView(mesa.Model):
             if isinstance(agent, TrafficLight):
                 trafficlight_positions.append(agent.pos.tolist())
         return trafficlight_positions
-

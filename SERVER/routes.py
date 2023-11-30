@@ -8,6 +8,13 @@ from flask import Flask, request
 app = Flask(__name__)
 street = None  # Inicializa boids como None
 
+@app.route('/api', methods = ['POST', 'GET'])
+def api():
+    if request.method == 'GET':
+        res = 'Hollla'
+        print(res)
+        return res
+
 @app.route('/carAgents', methods = ['POST', 'GET'])
 def carAgents():
     global street  # Hace referencia a la variable global boids
@@ -47,6 +54,14 @@ def trafficLightsPosition():
         street = StreetView(num=num)
         trafficlights = street.getTrafficLightPositions()
         return arrayToJSON(trafficlights)
+
+
+@app.route('/get_traffic_lights_state', methods=['GET'])
+def get_traffic_lights_state():
+    traffic_lights_state = {
+        f"TrafficLight_{i}": agent.state for i, agent in enumerate(street.schedule.agents) if isinstance(agent, TrafficLight)
+    }
+    return arrayToJSON(traffic_lights_state)
 
 def arrayToJSON(ar):
     result = []
