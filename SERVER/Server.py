@@ -13,7 +13,7 @@ from model import StreetView
 app = Flask(__name__)
 CORS(app)
 current_step = 0
-street = StreetView(population=2)
+street = StreetView()
 
 def street_portrayal(agent):
     if agent is None:
@@ -73,24 +73,37 @@ def street_portrayal(agent):
 def startRoute():
     global current_step
     global street
+
     if request.method == 'POST':
         if current_step < 1:
             if 'num' in request.form:
                 num_cars = int(request.form['num'])
-            else:
-                num_cars = 1
+                if num_cars > 1:
+                    street.update_population(num_cars)
 
-            street.num = num_cars
+            agents_info = []
+            # Filter Car agents
+            car_agents = [agent for agent in street.schedule.agents if isinstance(agent, Car)]
+            for agent in car_agents:
+                agent_data = {
+                    "agent": agent.unique_id,
+                    "x": agent.pos[0],
+                    "z": agent.pos[1]
+                }
+                print(f"agent_data: {agent_data}")
+                agents_info.append(agent_data)
+
             street.step()
             current_step += 1
 
-            res = f'Simulation started with {num_cars} cars.'
+            result = {"agents": agents_info}
+            res = jsonify(result)
         else:
             res = "Server error"
-        print(res)
-        return res
     else:
         res = "Server error"
+    print(f"Server response: {res}")
+    return res
 
 @app.route('/step', methods = ['POST', 'GET'])
 def stepRoute():
@@ -121,6 +134,7 @@ def pathRoute():
     global current_step
     global street
     if request.method == 'POST':
+        street.step()
         p = int(request.form['p'])
         car_path = [agent.path for agent in street.schedule.agents if isinstance(agent, Car) and agent.unique_id == 1]
         path = car_path[0]
@@ -208,7 +222,7 @@ def arrayToJSON(ar):
     return json.dumps({"agents": result})
 
 def run_flask():
-    app.run(port=5002, use_reloader=False)
+    app.run(port=8522, use_reloader=False)
 
 canvas_element = mesa.visualization.CanvasGrid(street_portrayal, 24, 24, 600, 600)
 chart_element = mesa.visualization.ChartModule(
